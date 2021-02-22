@@ -30,58 +30,37 @@ soup = BeautifulSoup(page.content, 'html.parser')
 # Step 3: Get number of dreams I have
 # Looks like it's contained in a span with the class 'counter-box'
 counter_box = soup.find('span', class_='counter-box')
-number_of_dreams = counter_box.text
+number_of_dreams = int(counter_box.text)
 
 # If that worked, I should see '214' print as of 2/21/2021 9pm
-print("Number of dreams I has: %s" % number_of_dreams)
+print("Number of dreams I has: %d" % number_of_dreams)
 
 # Divide number of dreams by 24, round up - that's the max number of
 # pages we should attempt to scrap
-number_of_pages = round(int(number_of_dreams) / 24)
+number_of_pages = round(number_of_dreams / 24)
 print("We should parse %d pages me thinks..." % number_of_pages)
 
+# Counter to make sure we got the right amount of dream urls
+real_number_of_dreams = 0
 
-# Looks like finding all the 'items' will get us all the dreams
-dreams = soup.find_all('div', class_='item')
-
-# Curious how many dreams each page has.
-# Turns out, it maxes out at 24. Could be less, like on the last page
-# or if I didn't have 24 dreams total.
-count=0
-
-# Now that we have all the dreams, let's make a list of the img URLs
+# List of all the dream img urls for mass downloading later on
 img_urls = []
-for dream in dreams:
-    # Debug the dreams
-    #print(dream)
-    img_html = dream.find('img', class_='light-gallery-item')
 
-    # Debug the img
-    #print(img_html)
-
-    # Ok, that worked, we have the imgs! Now just save off the data-src
-    # for each one - that's our img url :-)
-    img_url = img_html['data-src']
-
-    # This currently works - gets a list of dreams. WOO.
-    print(img_url)
-
-    img_urls.append(img_url)
-    
-    count += 1
-
-# Appears to be 24 dreams per page.
-# So we can do basic math - number of dreams I have, divided by 24
-# And that should *roughly* get me the number of pages to look at!
-print("Found %d dreams!" % count)
-
-# Now we can loop over additional pages. We have the number of pages from parsing
-# the first page. So if the number is >1, we should be good to run the above
-# code a few times or whatever.
-# Number of pages is currently 9, so this loop should go pages 2 to 9
+# Now we can loop over all the deep dream pages.
+# We have the number of pages from parsing the first page.
+# Number of pages is currently 9, so this loop should go pages 1 to 9
 # +1 because range doesn't include the end value
-for page in range (2, int(number_of_pages) + 1):
-    cur_dream_url = dream_url + "?page=" + str(page)
+for page_num in range (1, int(number_of_pages) + 1):
+
+    # I deleted the copy/pasta code, so now this loop handles all dreams
+    # Thus, must handle the edge case of first page not having a ?page=
+    # in the dream page URL
+    cur_dream_url = ''
+    if page == 1:
+        cur_dream_url = dream_url
+    else:   
+        cur_dream_url = dream_url + "?page=" + str(page_num)
+
     print("cur_dream_url is: %s" % cur_dream_url)
 
     # Step 1: Get the dream page
@@ -93,7 +72,9 @@ for page in range (2, int(number_of_pages) + 1):
     # Step 3: Get list of dreams
     dreams = soup.find_all('div', class_='item')
 
-    dream_count=0 # Counter to monitor number of dreams per page
+    # Counter to monitor number of dreams per page
+    # Testing shows max of 24 dreams per page, but could be less due to incomplete pages
+    dream_count=0
 
     # Step 4: Get list of dream img URLs
     for dream in dreams:
@@ -109,12 +90,28 @@ for page in range (2, int(number_of_pages) + 1):
         img_url = img_html['data-src']
 
         # This currently works - gets a list of dreams. WOO.
-        print(img_url)
+        #print(img_url)
 
         img_urls.append(img_url)
         
         dream_count += 1
+        real_number_of_dreams += 1
 
     # At this point, we're done for the current page.
     # Let's check how many dreams we got for the page though
-    print("Found %d dreams!" % dream_count)
+    print("Found %d dreams for page %d!" % (dream_count, page_num))
+
+# Some debugging checks
+# Should have gotten the same number of dreams as seen previously
+# So number_of_dreams should equal real_number_of_dreams
+print("Found %d number of 'real dreams" % number_of_dreams)
+print("We previously thought there would be %d dreams" % real_number_of_dreams)
+
+# Now that we have a list of img URLs, download them to an img directory
+# First, make sure an "img" directory exists
+
+# Second, download all the images
+
+# TODO: also make it not redownload images which already exist, no need to slam
+# poor deep dream generator!
+

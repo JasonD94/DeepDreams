@@ -7,4 +7,5 @@ The script to download dreams off of Deep Dream Generator requires the python3 r
 Install them by running the following commands in a command prompt / unix shell:
 
 pip3 install requests
+
 pip3 install beautifulsoup4
