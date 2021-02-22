@@ -110,31 +110,36 @@ print("We previously thought there would be %d dreams" % real_number_of_dreams)
 
 # Now that we have a list of img URLs, download them to an img directory
 # First, make sure an "img" directory exists
-does_dir_exist = os.path.isdir("img")
+downloads_dir = "img"
+does_dir_exist = os.path.isdir(downloads_dir)
 
 if does_dir_exist is False:
-    print("Making the img directory...")
-    os.mkdir("img")
+    print("Making the %s directory..." % downloads_dir)
+    os.mkdir(downloads_dir)
 else:
-    print("Img directory already exists :)")
+    print("%s directory already exists :)" % downloads_dir)
 
-# Second, download all the images
-# First, does our list contain the same number of URLs?
+# Debugging: does our list contain the same number of URLs?
 print("img_urls contains %d img urls" % len(img_urls))
 
-# Try downloading the first img
-downloads_dir = "img"
-img_url = img_urls[0]
-name = os.path.basename(img_url)
-filename = os.path.join(downloads_dir, name)
+# Second, download all the images
+for img_url in img_urls:
+    name = os.path.basename(img_url)
+    filename = os.path.join(downloads_dir, name)
 
-if not os.path.isfile(filename):
-    print("Downloading: " + filename)
-    try:
-        urllib.request.urlretrieve(img_url, filename)
-    except Exception as exception:
-        print(exception)
-        print("Encountered unknown error. Continuing.")
-else:
-    print("%s already downloaded!" % filename)
+    if not os.path.isfile(filename):
+        print("Downloading: %s to %s" % (name, filename))
+        
+        try:
+            urllib.request.urlretrieve(img_url, filename)
+            
+        except Exception as exception:
+            print(exception)
+            print("Encountered unknown error when trying to download %s. Continuing." % filename)
+    else:
+        print("%s already downloaded!" % filename)
 
+# At this point, we should have all the dreams nicely downloaded
+# Since we skip dreams already downloaded, this shouldn't take long to run
+# after publishing new dreams. niace!
+print("Hopefully all your dreams have come true!")
