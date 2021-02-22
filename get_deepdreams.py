@@ -90,7 +90,7 @@ for page_num in range (1, int(number_of_pages) + 1):
         img_url = img_html['data-src']
 
         # This currently works - gets a list of dreams. WOO.
-        print(img_url)
+        #print(img_url)
 
         img_urls.append(img_url)
         

@@ -127,3 +127,11 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+###############################################################################
+# 	BEGIN JSON IGNOREZ
+###############################################################################
+# Ignore the img dir - for now. It's like 76MB so should figure out
+# if I want to check those into this repo or a different one
+# Probably a different one. Leave this repo as the source to the scrapper
+img/
