@@ -100,7 +100,10 @@ for page_num in range (1, int(number_of_pages) + 1):
     # At this point, we're done for the current page.
     # Let's check how many dreams we got for the page though
     print("Found %d dreams for page %d!" % (dream_count, page_num))
-    break;
+
+    # Debugging - add a break here if things break, so you don't go through
+    # all the pages just to find out something broke with the img downloading code.
+    #break;
 
 # Some debugging checks
 # Should have gotten the same number of dreams as seen previously
