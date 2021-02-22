@@ -10,6 +10,11 @@ Install them by running the following commands in a command prompt / unix shell:
 
 ``pip3 install beautifulsoup4``
 
+## Usage
+Use the get_deepdreams.py script. Change the dream_url at the top TO YOUR ACCOUNT NUMBER/USERNAME
+
+Read the **¡¡ WARNING !!** for important info but the TL&DR is **DO NOT** use other people's accounts with this script!
+
 ## ¡¡ WARNING !!
 Deep Dream Generator states on the [Deep Dream Generator FAQ/Info Page](https://deepdreamgenerator.com/info) the following:
 
