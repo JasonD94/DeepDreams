@@ -1,4 +1,4 @@
-import requests
+import requests, os, urllib
 from bs4 import BeautifulSoup
 
 # Will be web scrapping my Deep Dream Generator public dreams, from:
@@ -90,7 +90,7 @@ for page_num in range (1, int(number_of_pages) + 1):
         img_url = img_html['data-src']
 
         # This currently works - gets a list of dreams. WOO.
-        #print(img_url)
+        print(img_url)
 
         img_urls.append(img_url)
         
@@ -100,6 +100,7 @@ for page_num in range (1, int(number_of_pages) + 1):
     # At this point, we're done for the current page.
     # Let's check how many dreams we got for the page though
     print("Found %d dreams for page %d!" % (dream_count, page_num))
+    break;
 
 # Some debugging checks
 # Should have gotten the same number of dreams as seen previously
@@ -109,9 +110,31 @@ print("We previously thought there would be %d dreams" % real_number_of_dreams)
 
 # Now that we have a list of img URLs, download them to an img directory
 # First, make sure an "img" directory exists
+does_dir_exist = os.path.isdir("img")
+
+if does_dir_exist is False:
+    print("Making the img directory...")
+    os.mkdir("img")
+else:
+    print("Img directory already exists :)")
 
 # Second, download all the images
+# First, does our list contain the same number of URLs?
+print("img_urls contains %d img urls" % len(img_urls))
 
-# TODO: also make it not redownload images which already exist, no need to slam
-# poor deep dream generator!
+# Try downloading the first img
+downloads_dir = "img"
+img_url = img_urls[0]
+name = os.path.basename(img_url)
+filename = os.path.join(downloads_dir, name)
+
+if not os.path.isfile(filename):
+    print("Downloading: " + filename)
+    try:
+        urllib.request.urlretrieve(img_url, filename)
+    except Exception as exception:
+        print(exception)
+        print("Encountered unknown error. Continuing.")
+else:
+    print("%s already downloaded!" % filename)
 
