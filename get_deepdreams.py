@@ -23,7 +23,7 @@ from bs4 import BeautifulSoup
 #
 #	Thought: could also append "/best" to get a list of dreams in order of rating
 #
-username = "304643"
+username = ">>this would be your username<<"
 dream_url = "https://deepdreamgenerator.com/u/" + username
 login_url = "https://deepdreamgenerator.com/login"
 
