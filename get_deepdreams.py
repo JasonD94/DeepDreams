@@ -1,6 +1,7 @@
-import requests, os, urllib
+import requests, os, urllib, math
 from bs4 import BeautifulSoup
 
+#
 # Will be web scrapping my Deep Dream Generator public dreams, from:
 # https://deepdreamgenerator.com/u/304643
 # Different pages, currently going up to page 9 like:
@@ -11,8 +12,19 @@ from bs4 import BeautifulSoup
 # You have not made any public Dreams yet.
 # You can go to your Dreams and start publishing some of them.
 #
+
 #
-dream_url = "https://deepdreamgenerator.com/u/304643"
+# ¡¡¡ NOTE: !!!
+# DO NOT SCRAP MY DREAMS, that goes against DeepDreamGenerator's guidelines:
+# https://deepdreamgenerator.com/info
+#
+# However, I feel like I SHOULD be allowed to download my own dreams, hence this script.
+# Thus, please change the username to your own account before running this script!
+#
+#	Thought: could also append "/best" to get a list of dreams in order of rating
+#
+username = "304643"
+dream_url = "https://deepdreamgenerator.com/u/" + username
 
 # Step 1: Get the first dream page, determine how many dreams I have
 page = requests.get(dream_url)
@@ -35,10 +47,10 @@ number_of_dreams = int(counter_box.text)
 # If that worked, I should see '214' print as of 2/21/2021 9pm
 print("Number of dreams I has: %d" % number_of_dreams)
 
-# Divide number of dreams by 24, round up - that's the max number of
-# pages we should attempt to scrap
-number_of_pages = round(number_of_dreams / 24)
-print("We should parse %d pages me thinks..." % number_of_pages)
+# Divide number of dreams by 24, AND ALWAYS round up [ hence math.ceil() ]
+# Since we want 9.1 to turn into Page 10, not Page 9
+number_of_pages = math.ceil(number_of_dreams / 24)
+print("We should parse %d pages I thinks...\n" % number_of_pages)
 
 # Counter to make sure we got the right amount of dream urls
 real_number_of_dreams = 0
@@ -64,12 +76,10 @@ for page_num in range (1, int(number_of_pages) + 1):
     print("cur_dream_url is: %s" % cur_dream_url)
 
     # Step 1: Get the dream page
+		# Step 2: Use BeautifulSoup 2 parse the dream page
+		# Step 3: Get list of dream
     page = requests.get(cur_dream_url)
-
-    # Step 2: Use BeautifulSoup 2 parse the dream page
     soup = BeautifulSoup(page.content, 'html.parser')
-
-    # Step 3: Get list of dreams
     dreams = soup.find_all('div', class_='item')
 
     # Counter to monitor number of dreams per page
@@ -78,20 +88,13 @@ for page_num in range (1, int(number_of_pages) + 1):
 
     # Step 4: Get list of dream img URLs
     for dream in dreams:
-        # Debug the dreams
-        #print(dream)
-        img_html = dream.find('img', class_='light-gallery-item')
 
-        # Debug the img
-        #print(img_html)
+	# Find the img's HTML
+        img_html = dream.find('img', class_='light-gallery-item')
 
         # Ok, that worked, we have the imgs! Now just save off the data-src
         # for each one - that's our img url :-)
         img_url = img_html['data-src']
-
-        # This currently works - gets a list of dreams. WOO.
-        #print(img_url)
-
         img_urls.append(img_url)
         
         dream_count += 1
@@ -108,8 +111,11 @@ for page_num in range (1, int(number_of_pages) + 1):
 # Some debugging checks
 # Should have gotten the same number of dreams as seen previously
 # So number_of_dreams should equal real_number_of_dreams
-print("Found %d number of 'real dreams" % number_of_dreams)
+print("\nFound %d number of 'real' dreams" % number_of_dreams)
 print("We previously thought there would be %d dreams" % real_number_of_dreams)
+
+# Debugging: does our list contain the same number of URLs?
+print("img_urls contains %d img urls\n" % len(img_urls))
 
 # Now that we have a list of img URLs, download them to an img directory
 # First, make sure an "img" directory exists
@@ -121,9 +127,6 @@ if does_dir_exist is False:
     os.mkdir(downloads_dir)
 else:
     print("%s directory already exists :)" % downloads_dir)
-
-# Debugging: does our list contain the same number of URLs?
-print("img_urls contains %d img urls" % len(img_urls))
 
 # Second, download all the images
 for img_url in img_urls:
@@ -145,4 +148,4 @@ for img_url in img_urls:
 # At this point, we should have all the dreams nicely downloaded
 # Since we skip dreams already downloaded, this shouldn't take long to run
 # after publishing new dreams. niace!
-print("Hopefully all your dreams have come true!")
+print("\n\nHopefully all your dreams have come true!")
