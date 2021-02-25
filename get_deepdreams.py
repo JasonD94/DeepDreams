@@ -36,6 +36,10 @@ login_url = "https://deepdreamgenerator.com/login"
          POSTED... ooo that would be super helpful and cool!)
 
         https://towardsdatascience.com/scraping-data-behind-site-logins-with-python-ee0676f523ee
+
+        Some other very helpful articles/posts:
+        https://kazuar.github.io/scraping-tutorial/
+        https://stackoverflow.com/a/25284165
 """
 
 session = requests.Session()
@@ -99,6 +103,14 @@ counter_box = dream_soup.find('span', class_='counter-box')
 # So counter box is different or something for the 'best' page... hmm, debug!
 # Update: /best/ requires a login... blah...
 print(counter_box)
+
+# Check for no counter_box; this is a tell tale sign we're stuck at the log in page for DDG...
+# If so, the safest option to warn the user & exit, instead of causing an exception on the next line.
+if counter_box is None:
+    print("ERROR: log in to Deep Dream Generator Failed! Check your creds or maybe this script borked. :(")
+
+    # Ye this is apparently not recommended but it doesn't quit the Idle shell on my Windows box so...
+    raise SystemExit
 
 number_of_dreams = int(counter_box.text)
 
