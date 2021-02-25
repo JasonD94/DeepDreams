@@ -21,8 +21,6 @@ from bs4 import BeautifulSoup
 # However, I feel like I SHOULD be allowed to download my own dreams, hence this script.
 # Thus, please change the username to your own account before running this script!
 #
-#	Thought: could also append "/best" to get a list of dreams in order of rating
-#
 username = ">>this would be your username<<"
 dream_url = "https://deepdreamgenerator.com/u/" + username
 login_url = "https://deepdreamgenerator.com/login"
@@ -66,9 +64,17 @@ s = session.post(login_url, data=payload, headers = dict(referer=login_url))
 # If we pick latest, we should name the dream based on date it was added
 # If we pick best, we should name the dreams like "dream_num1.jpg", "dream_num2",
 # etc where 1 == #1 dream, 2 == #2 dream, etc.
+"""
+    Last useful thing: could use '/account' now that the log in part is working
+    to download all of my own dreams, even the ones not published.
+    This is slightly trickier since I'll need to parse the pagination list,
+    and find the largest page number in it. I won't be able to use the counter box for this.
+    Though, if I figure out how to do this (shouldn't be too hard) I could just do this
+    for the main dream page too... should probably do it this way.
+"""
 print("¡¡¡¡ WARNING: only download dreams you personally created !!!!\n\n")
 print("** Deep Dream Generator Downloader V1.0 **")
-print("Enter 1 for latest dream sorting download, or 2 for best dream sorting download: ")
+print("Enter 1 for latest dream sorting download, or 2 for best dream sorting download ")
 sorting_type = ""
 
 while sorting_type is not "1" and sorting_type is not "2":
