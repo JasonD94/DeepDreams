@@ -25,6 +25,27 @@ from bs4 import BeautifulSoup
 #
 username = "304643"
 dream_url = "https://deepdreamgenerator.com/u/" + username
+login_url = "https://deepdreamgenerator.com/login"
+
+"""
+        If using the "/best" sorting option, you MUST log into Deep Dream Generator
+        Following this site's recommendation on how to log in using Python + Requests
+        so we can still download dreams. :-)
+
+        (side idea/note: if this works, I could download dreams I HAVEN'T PUBLICALLY
+         POSTED... ooo that would be super helpful and cool!)
+
+        https://towardsdatascience.com/scraping-data-behind-site-logins-with-python-ee0676f523ee
+"""
+
+session = requests.Session()
+
+# obviously NOT publishing these details to Github nor do I recommend ANYONE do such a thing on purpose...
+payload = {'email': '[MY_EMAIL'],
+           'password': '[MY_PASSWORD']}
+
+# Post the payload to the site to log in
+s = session.post(login_url, data=payload)
 
 # Step 0: Do we want to download dreams by latest or best sorting?
 # If we pick latest, we should name the dream based on date it was added
@@ -35,7 +56,7 @@ print("** Deep Dream Generator Downloader V1.0 **")
 print("Enter 1 for latest dream sorting download, or 2 for best dream sorting download: ")
 sorting_type = ""
 
-while sorting_type is not "1" or sorting_type is not "2":
+while sorting_type is not "1" and sorting_type is not "2":
     sorting_type = input()
 
     if sorting_type is not "1" and sorting_type is not "2":
@@ -43,10 +64,12 @@ while sorting_type is not "1" or sorting_type is not "2":
         print("Please enter 1 for latest dream sorting download, or 2 for best dream sorting download")
 
 if sorting_type is "2":
-    dream_url + "/best"
+    dream_url = dream_url + "/best"
+
+print("Dream url is: %s" % dream_url)
 
 # Step 1: Get the first dream page, determine how many dreams I have
-page = requests.get(dream_url)
+page = session.get(dream_url)
 
 # Debug what we got - should say <Response [200]> if successful
 print(str(page))
@@ -61,6 +84,11 @@ soup = BeautifulSoup(page.content, 'html.parser')
 # Step 3: Get number of dreams I have
 # Looks like it's contained in a span with the class 'counter-box'
 counter_box = soup.find('span', class_='counter-box')
+
+# So counter box is different or something for the 'best' page... hmm, debug!
+# Update: /best/ requires a login... blah...
+print(counter_box)
+
 number_of_dreams = int(counter_box.text)
 
 # If that worked, I should see '214' print as of 2/21/2021 9pm
@@ -95,8 +123,9 @@ for page_num in range (1, int(number_of_pages) + 1):
     print("cur_dream_url is: %s" % cur_dream_url)
 
     # Step 1: Get the dream page
-		# Step 2: Use BeautifulSoup 2 parse the dream page
-		# Step 3: Get list of dream
+    # Step 2: Use BeautifulSoup 2 parse the dream page
+    # Step 3: Get list of dream
+    # NOTE: probably fine using requests here, but if that breaks, switch to 'session' instead
     page = requests.get(cur_dream_url)
     soup = BeautifulSoup(page.content, 'html.parser')
     dreams = soup.find_all('div', class_='item')
@@ -152,7 +181,7 @@ if does_dir_exist is False:
 else:
     print("%s directory already exists :)" % downloads_dir)
 
-dream_count=0
+dream_count=1
 
 # Second, download all the images
 for img_url in img_urls:
