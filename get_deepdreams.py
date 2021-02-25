@@ -26,6 +26,25 @@ from bs4 import BeautifulSoup
 username = "304643"
 dream_url = "https://deepdreamgenerator.com/u/" + username
 
+# Step 0: Do we want to download dreams by latest or best sorting?
+# If we pick latest, we should name the dream based on date it was added
+# If we pick best, we should name the dreams like "dream_num1.jpg", "dream_num2",
+# etc where 1 == #1 dream, 2 == #2 dream, etc.
+print("¡¡¡¡ WARNING: only download dreams you personally created !!!!\n\n")
+print("** Deep Dream Generator Downloader V1.0 **")
+print("Enter 1 for latest dream sorting download, or 2 for best dream sorting download: ")
+sorting_type = ""
+
+while sorting_type is not "1" or sorting_type is not "2":
+    sorting_type = input()
+
+    if sorting_type is not "1" and sorting_type is not "2":
+        print("\nError: invalid sorting type. ")
+        print("Please enter 1 for latest dream sorting download, or 2 for best dream sorting download")
+
+if sorting_type is "2":
+    dream_url + "/best"
+
 # Step 1: Get the first dream page, determine how many dreams I have
 page = requests.get(dream_url)
 
@@ -120,6 +139,11 @@ print("img_urls contains %d img urls\n" % len(img_urls))
 # Now that we have a list of img URLs, download them to an img directory
 # First, make sure an "img" directory exists
 downloads_dir = "img"
+
+# Using a separate dir for best dream sorting download
+if sorting_type is "2":
+    downloads_dir = "best_dreams"
+
 does_dir_exist = os.path.isdir(downloads_dir)
 
 if does_dir_exist is False:
@@ -128,10 +152,18 @@ if does_dir_exist is False:
 else:
     print("%s directory already exists :)" % downloads_dir)
 
+dream_count=0
+
 # Second, download all the images
 for img_url in img_urls:
     name = os.path.basename(img_url)
     filename = os.path.join(downloads_dir, name)
+
+    # If sorting by best, then filename should be "dream_num###.jpg"
+    # instead of whatever randomly generated filename DeepDreamGenerator uses
+    if sorting_type is "2":
+        name = "dream_num" + str(dream_count) + ".jpg"
+        filename = os.path.join(downloads_dir, name)
 
     if not os.path.isfile(filename):
         print("Downloading: %s to %s" % (name, filename))
@@ -144,6 +176,8 @@ for img_url in img_urls:
             print("Encountered unknown error when trying to download %s. Continuing." % filename)
     else:
         print("%s already downloaded!" % filename)
+
+    dream_count += 1
 
 # At this point, we should have all the dreams nicely downloaded
 # Since we skip dreams already downloaded, this shouldn't take long to run
