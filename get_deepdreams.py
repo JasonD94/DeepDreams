@@ -40,12 +40,23 @@ login_url = "https://deepdreamgenerator.com/login"
 
 session = requests.Session()
 
-# obviously NOT publishing these details to Github nor do I recommend ANYONE do such a thing on purpose...
-payload = {'email': '[MY_EMAIL'],
-           'password': '[MY_PASSWORD']}
+# Get the login page so we can get the token from the page
+login_page = session.get(login_url)
 
-# Post the payload to the site to log in
-s = session.post(login_url, data=payload)
+# Parse out the token - it's under an input with the name '_token'
+login_soup = BeautifulSoup(login_page.content, 'html.parser')
+token = login_soup.find('input', {'name': '_token'}).get('value')
+
+# obviously NOT publishing these details to Github nor do I recommend ANYONE do such a thing on purpose...
+payload = {'email': '>>this_would_be_your_email<<',
+           'password': '>>this_would_be_your_password<<',
+           '_token': token}
+
+#print("Token might be: %s" % token)
+#print("payload: %s" % payload)
+
+# Try to post the payload to deep dream generator so we can log in
+s = session.post(login_url, data=payload, headers = dict(referer=login_url))
 
 # Step 0: Do we want to download dreams by latest or best sorting?
 # If we pick latest, we should name the dream based on date it was added
@@ -69,21 +80,21 @@ if sorting_type is "2":
 print("Dream url is: %s" % dream_url)
 
 # Step 1: Get the first dream page, determine how many dreams I have
-page = session.get(dream_url)
+dream_page = session.get(dream_url)
 
 # Debug what we got - should say <Response [200]> if successful
-print(str(page))
+print(str(dream_page))
 
 # Step 2: Use BeautifulSoup 2 parse le page
-soup = BeautifulSoup(page.content, 'html.parser')
+dream_soup = BeautifulSoup(dream_page.content, 'html.parser')
 
 # Debug what soup got
 # This is YUGE so uncomment if you dare.
-#print(soup)
+#print(dream_soup)
 
 # Step 3: Get number of dreams I have
 # Looks like it's contained in a span with the class 'counter-box'
-counter_box = soup.find('span', class_='counter-box')
+counter_box = dream_soup.find('span', class_='counter-box')
 
 # So counter box is different or something for the 'best' page... hmm, debug!
 # Update: /best/ requires a login... blah...
@@ -115,7 +126,7 @@ for page_num in range (1, int(number_of_pages) + 1):
     # Thus, must handle the edge case of first page not having a ?page=
     # in the dream page URL
     cur_dream_url = ''
-    if page == 1:
+    if page_num == 1:
         cur_dream_url = dream_url
     else:   
         cur_dream_url = dream_url + "?page=" + str(page_num)
@@ -126,9 +137,9 @@ for page_num in range (1, int(number_of_pages) + 1):
     # Step 2: Use BeautifulSoup 2 parse the dream page
     # Step 3: Get list of dream
     # NOTE: probably fine using requests here, but if that breaks, switch to 'session' instead
-    page = requests.get(cur_dream_url)
-    soup = BeautifulSoup(page.content, 'html.parser')
-    dreams = soup.find_all('div', class_='item')
+    dream_page = session.get(cur_dream_url)
+    dream_soup = BeautifulSoup(dream_page.content, 'html.parser')
+    dreams = dream_soup.find_all('div', class_='item')
 
     # Counter to monitor number of dreams per page
     # Testing shows max of 24 dreams per page, but could be less due to incomplete pages

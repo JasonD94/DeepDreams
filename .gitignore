@@ -134,4 +134,6 @@ dmypy.json
 # Ignore the img dir - for now. It's like 76MB so should figure out
 # if I want to check those into this repo or a different one
 # Probably a different one. Leave this repo as the source to the scrapper
+# Also ignore 'best_dreams' as that too is an img dir
 img/
+best_dreams/
