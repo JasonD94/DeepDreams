@@ -74,18 +74,21 @@ s = session.post(login_url, data=payload, headers = dict(referer=login_url))
 """
 print("¡¡¡¡ WARNING: only download dreams you personally created !!!!\n\n")
 print("** Deep Dream Generator Downloader V1.0 **")
-print("Enter 1 for latest dream sorting download, or 2 for best dream sorting download ")
+print("Enter 1 for latest dream sorting, 2 for best dream sorting or 3 for all dreams: ")
 sorting_type = ""
 
-while sorting_type is not "1" and sorting_type is not "2":
+while sorting_type is not "1" and sorting_type is not "2" and sorting_type is not "3":
     sorting_type = input()
 
-    if sorting_type is not "1" and sorting_type is not "2":
+    if sorting_type is not "1" and sorting_type is not "2" and sorting_type is not "3":
         print("\nError: invalid sorting type. ")
-        print("Please enter 1 for latest dream sorting download, or 2 for best dream sorting download")
+        print("Enter 1 for latest dream sorting, 2 for best dream sorting or 3 for all dreams: ")
 
 if sorting_type is "2":
     dream_url = dream_url + "/best"
+
+elif sorting_type is "3":
+    dream_url = dream_url + "/account"
 
 print("Dream url is: %s" % dream_url)
 
@@ -106,8 +109,6 @@ dream_soup = BeautifulSoup(dream_page.content, 'html.parser')
 # Looks like it's contained in a span with the class 'counter-box'
 counter_box = dream_soup.find('span', class_='counter-box')
 
-# So counter box is different or something for the 'best' page... hmm, debug!
-# Update: /best/ requires a login... blah...
 print(counter_box)
 
 # Check for no counter_box; this is a tell tale sign we're stuck at the log in page for DDG...
@@ -127,6 +128,23 @@ print("Number of dreams I has: %d" % number_of_dreams)
 # Since we want 9.1 to turn into Page 10, not Page 9
 number_of_pages = math.ceil(number_of_dreams / 24)
 print("We should parse %d pages I thinks...\n" % number_of_pages)
+
+# For sorting_type "3", we'll have to grab the number of pages from the
+# "pagination" ul class.
+pagination_ul_list = dream_soup.find_all('span', class_='page-link')
+max_page = 0
+
+# Get the largest page number.
+for pagination_span in pagination_ul_list:
+    if pagination_span is not None:
+        try:
+            if int(pagination_span.text) > max_page:
+                max_page = int(pagination_span.text)
+        except:
+            print("Invalid page number found for %s" % pagination_span)
+
+# Debugging
+print("Looks like the number of pages should be %d" % max_page)
 
 # Counter to make sure we got the right amount of dream urls
 real_number_of_dreams = 0
