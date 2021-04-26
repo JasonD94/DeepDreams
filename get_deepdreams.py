@@ -1,17 +1,36 @@
 import requests, os, urllib, math
 from bs4 import BeautifulSoup
 
-#
-# Will be web scrapping my Deep Dream Generator public dreams, from:
-# https://deepdreamgenerator.com/u/304643
-# Different pages, currently going up to page 9 like:
-# https://deepdreamgenerator.com/u/304643?page=9
-# Trying to hit page=## where ## is above the max displays an error saying:
-#
-# Empty
-# You have not made any public Dreams yet.
-# You can go to your Dreams and start publishing some of them.
-#
+"""
+    HOW TO USE THIS SCRIPT:
+
+    1. Add your DDG username into the 'username' variable (TODO: make this a command line option if empty)
+    2. Add your DDG email to the payload variable (in the blank string next to 'email')
+    3. Add your DDG password to the payload variable (in the blank string next to 'password')
+    4. Run this script (in IDLE, hit F5)
+    5. Type a number between 1 and 4 into the console. The options are straight forward; they're just
+       how you'd like the dreams to be sorted by. Options are 'latest', 'best', and 'all'. All includes
+       non-public dreams too, and is basically the 'latest' sorting but includes non-public dreams.
+       Option '4' is all of the above run one by one (could parallize this but might annoy DDG and I think
+       they only like one auth at a time, so best not to do this without asking them nicely)
+    6. Sit back and watch your dreams come true. Dreams get downloaded into directories where ever this script
+       lives. Directories include 'latest_dreams' (option 1), 'best_dreams' (option 2) and
+       'all_dreams' (option 3). Option 4 will populate all of these directories for you. :)
+
+    NOTEs:
+
+    'DDG' => DeepDreamGenerator
+
+    TODOs:
+
+    - Make a command line option for username, email, and password
+    - More error checking
+    - Rework the script so it isn't a giant 300 line file, I made get_deep_dreams() as a hacky work
+      around to add option 4 (which runs all sorting options)
+    - Probably should ask DDG if this is really okay, but but now they haven't yelled at me or banned me
+      Also now I have my dreams so I don't really care if they ban me but I would be really sad if they did
+      (DDG if you're reading this, I tried to follow your rules, plz don't ban me ok?)
+"""
 
 #
 # ¡¡¡ NOTE: !!!
@@ -19,7 +38,10 @@ from bs4 import BeautifulSoup
 # https://deepdreamgenerator.com/info
 #
 # However, I feel like I SHOULD be allowed to download my own dreams, hence this script.
-# Thus, please change the username to your own account before running this script!
+#
+# Thus, you MUST add your own username to this script. You can find it on your DDG account
+# page - it's the part after /u/ in the DDG URL. For example, my username is '304643', and
+# my DDG account URL is: https://deepdreamgenerator.com/u/304643
 #
 username = ""
 dream_url = "https://deepdreamgenerator.com/u/" + username
@@ -29,9 +51,6 @@ login_url = "https://deepdreamgenerator.com/login"
         If using the "/best" sorting option, you MUST log into Deep Dream Generator
         Following this site's recommendation on how to log in using Python + Requests
         so we can still download dreams. :-)
-
-        (side idea/note: if this works, I could download dreams I HAVEN'T PUBLICALLY
-         POSTED... ooo that would be super helpful and cool!)
 
         https://towardsdatascience.com/scraping-data-behind-site-logins-with-python-ee0676f523ee
 
@@ -53,9 +72,6 @@ token = login_soup.find('input', {'name': '_token'}).get('value')
 payload = {'email': '',
            'password': '',
            '_token': token}
-
-#print("Token might be: %s" % token)
-#print("payload: %s" % payload)
 
 # Try to post the payload to deep dream generator so we can log in
 s = session.post(login_url, data=payload, headers = dict(referer=login_url))
@@ -117,8 +133,6 @@ def get_deep_dreams():
     pagination_ul_list = dream_soup.find_all(class_='page-link')
     max_page = 0
 
-    #print(pagination_ul_list)
-
     # Get the largest page number.
     for pagination_element in pagination_ul_list:
         if pagination_element is not None:
@@ -137,7 +151,7 @@ def get_deep_dreams():
 
     # Only use max_page if we're downloading ALL of my dreams
     # Otherwise we'll stick to the tried & true counter_box
-    if sorting_type is "3":
+    if sorting_type == "3":
         number_of_pages = max_page
 
     # Counter to make sure we got the right amount of dream urls
@@ -211,10 +225,10 @@ def get_deep_dreams():
     downloads_dir = "latest_dreams"
 
     # Using a separate dir for best dream sorting download
-    if sorting_type is "2":
+    if sorting_type == "2":
         downloads_dir = "best_dreams"
 
-    elif sorting_type is "3":
+    elif sorting_type == "3":
         downloads_dir = "all_dreams"
 
     does_dir_exist = os.path.isdir(downloads_dir)
@@ -236,7 +250,7 @@ def get_deep_dreams():
 
         # If sorting by best, then filename should be "dream_num###.jpg"
         # instead of whatever randomly generated filename DeepDreamGenerator uses
-        if sorting_type is "2":
+        if sorting_type == "2":
             name = "dream_num" + str(dream_count) + ".jpg"
             filename = os.path.join(downloads_dir, name)
 
@@ -275,32 +289,36 @@ print("** Deep Dream Generator Downloader V1.1 **")
 print("Enter 1 for latest dream sorting, 2 for best dream sorting, 3 for all dreams and 4 for all of these: ")
 sorting_type = ""
 
-while sorting_type is not "1" and sorting_type is not "2" and sorting_type is not "3" and sorting_type is not "4":
+while sorting_type != "1" and sorting_type != "2" and sorting_type != "3" and sorting_type != "4":
     sorting_type = input()
 
-    if sorting_type is not "1" and sorting_type is not "2" and sorting_type is not "3" \
-       and sorting_type is not "4" :
+    if sorting_type != "1" and sorting_type != "2" and sorting_type != "3" and sorting_type != "4" :
         print("\nError: invalid sorting type. ")
         print("Enter 1 for latest dream sorting, 2 for best dream sorting, 3 for all dreams \
                and 4 for all of these: ")
 
-if sorting_type is "2":
+if sorting_type == "2":
     dream_url = dream_url + "/best"
 
-elif sorting_type is "3":
+elif sorting_type == "3":
     dream_url = dream_url + "/account"
 
-elif sorting_type is "4":
+elif sorting_type == "4":
 
     # Method 1 first, "latest" sorting
+    # Make sure to set sorting_type so the rest of the script works; noticed directories weren't being
+    # created when I ran this for the first time on a different machine. Opps!
+    sorting_type = "1"
     dream_url = "https://deepdreamgenerator.com/u/" + username
     get_deep_dreams()
 
     # Method 2 second, "best" sorting
+    sorting_type = "2"
     dream_url = "https://deepdreamgenerator.com/u/" + username + "/best"
     get_deep_dreams()
 
     # Finally Method 3, "all dreams even though not public"
+    sorting_type = "3"
     dream_url = "https://deepdreamgenerator.com/u/" + username + "/account"
     get_deep_dreams()
 
@@ -309,4 +327,3 @@ elif sorting_type is "4":
 
 # If we end up here, then options 1 - 3 were selected. So grab the requested dreams!
 get_deep_dreams()
-
