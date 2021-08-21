@@ -1,4 +1,4 @@
-import requests, os, urllib, math, secrets
+import requests, os, urllib, math
 from bs4 import BeautifulSoup
 
 """
@@ -43,27 +43,7 @@ from bs4 import BeautifulSoup
 # page - it's the part after /u/ in the DDG URL. For example, my username is '304643', and
 # my DDG account URL is: https://deepdreamgenerator.com/u/304643
 #
-
-"""
-********************************************************************************
-* Note: using another .py file called "secrets.py" that is hidden from Git/GitHub
-* 		  If you wish to use this script with the "/best" or "all" filters, you'll
-*       need to provide credentials for your Deep Dream Generator account in the
-*       "secrets.yaml" file. You'll need to create it yourself in the format:
-*
-*   email: your@email.com
-*   password: your_password
-*   username: your_ddg_username
-*
-*	Based on: https://stackoverflow.com/a/25501861
-*
-********************************************************************************
-"""
-
-username = secrets.username
-email = secrets.email
-password = secrets.password
-
+username = ""
 dream_url = "https://deepdreamgenerator.com/u/" + username
 login_url = "https://deepdreamgenerator.com/login"
 
@@ -89,8 +69,8 @@ login_soup = BeautifulSoup(login_page.content, 'html.parser')
 token = login_soup.find('input', {'name': '_token'}).get('value')
 
 # Obviously NOT publishing these details to Github nor do I recommend ANYONE do such a thing on purpose...
-payload = {'email': email,
-           'password': password,
+payload = {'email': '',
+           'password': '',
            '_token': token}
 
 # Try to post the payload to deep dream generator so we can log in
@@ -168,6 +148,7 @@ def get_deep_dreams():
 
     # Debugging
     print("Looks like the number of pages should be %d" % max_page)
+    print("These dreams are all below the max 2.1MP! You should increase them. ;)")
 
     # Only use max_page if we're downloading ALL of my dreams
     # Otherwise we'll stick to the tried & true counter_box
@@ -195,7 +176,7 @@ def get_deep_dreams():
         else:   
             cur_dream_url = dream_url + "?page=" + str(page_num)
 
-        print("cur_dream_url is: %s" % cur_dream_url)
+        #print("cur_dream_url is: %s" % cur_dream_url)
 
         # Step 1: Get the dream page
         # Step 2: Use BeautifulSoup 2 parse the dream page
@@ -209,23 +190,66 @@ def get_deep_dreams():
         # Testing shows max of 24 dreams per page, but could be less due to incomplete pages
         dream_count=0
 
-        # Step 4: Get list of dream img URLs
+        # Step 4: Get list of dream info resolutions
         for dream in dreams:
 
             # Find the img's HTML
             img_html = dream.find('img', class_='light-gallery-item')
 
-            # Ok, that worked, we have the imgs! Now just save off the data-src
-            # for each one - that's our img url :-)
-            img_url = img_html['data-src']
-            img_urls.append(img_url)
+            # Ok, that worked, we have the img! Now just save off the DDG link
+            # TODO: figure out a better way to do this, seems hacky but works
+            ddg_html = img_html['data-sub-html']
+            ddg_soup = BeautifulSoup(ddg_html, 'html.parser')
+            ddg_url = ddg_soup.find('a')['href']
+            
+            #print("img_html: %s" % img_html)
+            #print("ddg_html: %s" % ddg_html)
+            #print("ddg_soup: %s" % ddg_soup)
+            #print("Dream url is: %s" % ddg_url)
+
+            # Find the info popup's HTML
+            info_html = dream.find('ul', class_='dream-info-popup')
+
+            # Debug - looks like it worked
+            #print("info_hmtl is: %s" % info_html)
+
+            # Ok, that worked, we have the info popup! Now just save off the resolution
+            # found under the 2nd li and then under the ul and 2nd li under there...
+            used_settings = info_html.find_all('li')[2]
+
+
+            # Almost there...
+            #print("used_settings is: %s" % used_settings)
+
+            # Originally tried just doing ('li')[2] but doing it this way to get JUST the text
+            count = 1
+            resolution = ""
+            used_settings_elements = used_settings.find_all('li')
+
+            for settings in used_settings_elements:
+                #print(settings.text)
+
+                if count == 2:
+                    resolution = settings.text.split(':')[1]    # split to get just the resolution #
+                    break;
+
+                count = count + 1
+
+            #print("resolution is: %s" % resolution)
+
+            # Now append DDG URL plus resolution in CSV format for later export
+            img_urls.append(ddg_url + ":" + resolution + ",")
+
+            # Only print the ones that ARE NOT 2.1MP, since I only care if I should update them or not!
+            if resolution != " 2.1MP":
+                print("dream #%s " % real_number_of_dreams + ddg_url + ":" + resolution + "")
             
             dream_count += 1
             real_number_of_dreams += 1
 
         # At this point, we're done for the current page.
         # Let's check how many dreams we got for the page though
-        print("Found %d dreams for page %d!" % (dream_count, page_num))
+        #print("Found %d dreams for page %d!" % (dream_count, page_num))
 
         # Debugging - add a break here if things break, so you don't go through
         # all the pages just to find out something broke with the img downloading code.
@@ -240,61 +264,14 @@ def get_deep_dreams():
     # Debugging: does our list contain the same number of URLs?
     print("img_urls contains %d img urls\n" % len(img_urls))
 
-    # Now that we have a list of img URLs, download them to an img directory
-    # First, make sure an "img" directory exists
-    downloads_dir = "latest_dreams"
-
-    # Using a separate dir for best dream sorting download
-    if sorting_type == "2":
-        downloads_dir = "best_dreams"
-
-    elif sorting_type == "3":
-        downloads_dir = "all_dreams"
-
-    does_dir_exist = os.path.isdir(downloads_dir)
-
-    if does_dir_exist is False:
-        print("Making the %s directory..." % downloads_dir)
-        os.mkdir(downloads_dir)
-    else:
-        print("%s directory already exists :)" % downloads_dir)
-
     dream_count=1
     dream_downloaded=1
     dream_errors=0
 
-    # Second, download all the images
-    for img_url in img_urls:
-        name = os.path.basename(img_url)
-        filename = os.path.join(downloads_dir, name)
-
-        # If sorting by best, then filename should be "dream_num###.jpg"
-        # instead of whatever randomly generated filename DeepDreamGenerator uses
-        if sorting_type == "2":
-            name = "dream_num" + str(dream_count) + ".jpg"
-            filename = os.path.join(downloads_dir, name)
-
-        if not os.path.isfile(filename):
-            print("Downloading: %s to %s" % (name, filename))
-            
-            try:
-                urllib.request.urlretrieve(img_url, filename)
-                dream_downloaded += 1
-                
-            except Exception as exception:
-                print(exception)
-                print("Encountered unknown error when trying to download %s. Continuing." % filename)
-                dream_errors += 1
-        else:
-            print("%s already downloaded!" % filename)
-
-        dream_count += 1
-
     # At this point, we should have all the dreams nicely downloaded
     # Since we skip dreams already downloaded, this shouldn't take long to run
     # after publishing new dreams. niace!
-    print("\nFound %d dreams. Downloaded %d of them this run.\n" % (dream_count, dream_downloaded))
-    print("NOTE: found %d errors when trying to download dreams.\n" % dream_errors)
+    print("\nFound %d dreams.\n" % (dream_count))
 
     print("Hopefully all your dreams have come true!")
 
