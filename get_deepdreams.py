@@ -4,16 +4,15 @@ from bs4 import BeautifulSoup
 """
     HOW TO USE THIS SCRIPT:
 
-    1. Add your DDG username into the 'username' variable (TODO: make this a command line option if empty)
-    2. Add your DDG email to the payload variable (in the blank string next to 'email')
-    3. Add your DDG password to the payload variable (in the blank string next to 'password')
-    4. Run this script (in IDLE, hit F5)
-    5. Type a number between 1 and 4 into the console. The options are straight forward; they're just
+    1. Add a "secrets.py" file with your DDG login credentials (see the comment above the definition
+       of the username/email/password variables)
+    2. Run this script (in IDLE, hit F5)
+    3. Type a number between 1 and 4 into the console. The options are straight forward; they're just
        how you'd like the dreams to be sorted by. Options are 'latest', 'best', and 'all'. All includes
        non-public dreams too, and is basically the 'latest' sorting but includes non-public dreams.
        Option '4' is all of the above run one by one (could parallize this but might annoy DDG and I think
        they only like one auth at a time, so best not to do this without asking them nicely)
-    6. Sit back and watch your dreams come true. Dreams get downloaded into directories where ever this script
+    4. Sit back and watch your dreams come true. Dreams get downloaded into directories where ever this script
        lives. Directories include 'latest_dreams' (option 1), 'best_dreams' (option 2) and
        'all_dreams' (option 3). Option 4 will populate all of these directories for you. :)
 
@@ -39,9 +38,9 @@ from bs4 import BeautifulSoup
 #
 # However, I feel like I SHOULD be allowed to download my own dreams, hence this script.
 #
-# Thus, you MUST add your own username to this script. You can find it on your DDG account
-# page - it's the part after /u/ in the DDG URL. For example, my username is '304643', and
-# my DDG account URL is: https://deepdreamgenerator.com/u/304643
+# Thus, you MUST user your own user credentials to run this script. I no longer include
+# mine and my secrets.py file is .gitignore'd so make sure to make a DDG account to
+# take full advantage of this script
 #
 
 """
@@ -59,7 +58,6 @@ from bs4 import BeautifulSoup
 *
 ********************************************************************************
 """
-
 username = secrets.username
 email = secrets.email
 password = secrets.password
@@ -105,13 +103,15 @@ def get_largest_page_number(pagination_ul_list):
         if pagination_element is not None:
             try:
                 if int(pagination_element.text) > max_page:
-                    return int(pagination_element.text)
+                    max_page = int(pagination_element.text)
             except:
                 # A few of the pagination elements aren't valid integers
                 # Examples: < ... >
                 # So just ignore them.
                 #print("Invalid page number found for %s" % pagination_element)
                 continue
+
+    return max_page
 
 # Get all the URLs to download images off of
 def get_img_urls(number_of_pages):
