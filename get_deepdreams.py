@@ -1,4 +1,4 @@
-import requests, os, urllib, math
+import requests, os, urllib, math, secrets
 from bs4 import BeautifulSoup
 
 #
@@ -21,7 +21,27 @@ from bs4 import BeautifulSoup
 # However, I feel like I SHOULD be allowed to download my own dreams, hence this script.
 # Thus, please change the username to your own account before running this script!
 #
-username = ""
+
+"""
+********************************************************************************
+* Note: using another .py file called "secrets.py" that is hidden from Git/GitHub
+* 		  If you wish to use this script with the "/best" or "all" filters, you'll
+*       need to provide credentials for your Deep Dream Generator account in the
+*       "secrets.yaml" file. You'll need to create it yourself in the format:
+*
+*   email: your@email.com
+*   password: your_password
+*   username: your_ddg_username
+*
+*	Based on: https://stackoverflow.com/a/25501861
+*
+********************************************************************************
+"""
+
+username = secrets.username
+email = secrets.email
+password = secrets.password
+
 dream_url = "https://deepdreamgenerator.com/u/" + username
 login_url = "https://deepdreamgenerator.com/login"
 
@@ -29,9 +49,6 @@ login_url = "https://deepdreamgenerator.com/login"
         If using the "/best" sorting option, you MUST log into Deep Dream Generator
         Following this site's recommendation on how to log in using Python + Requests
         so we can still download dreams. :-)
-
-        (side idea/note: if this works, I could download dreams I HAVEN'T PUBLICALLY
-         POSTED... ooo that would be super helpful and cool!)
 
         https://towardsdatascience.com/scraping-data-behind-site-logins-with-python-ee0676f523ee
 
@@ -50,12 +67,9 @@ login_soup = BeautifulSoup(login_page.content, 'html.parser')
 token = login_soup.find('input', {'name': '_token'}).get('value')
 
 # Obviously NOT publishing these details to Github nor do I recommend ANYONE do such a thing on purpose...
-payload = {'email': '',
-           'password': '',
+payload = {'email': email,
+           'password': password,
            '_token': token}
-
-#print("Token might be: %s" % token)
-#print("payload: %s" % payload)
 
 # Try to post the payload to deep dream generator so we can log in
 s = session.post(login_url, data=payload, headers = dict(referer=login_url))

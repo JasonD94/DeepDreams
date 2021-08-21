@@ -135,3 +135,6 @@ dmypy.json
 all_dreams/
 best_dreams/
 latest_dreams/
+
+# !!! IMPORTANT - hide login creds from GitHub/Python script !!!
+secrets.py
